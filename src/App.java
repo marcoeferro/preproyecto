@@ -4,8 +4,8 @@ import java.io.*;
 
 public class App {
     public static void main(String[] args) throws Exception {
-        // Ventana ventana = new Ventana();
-        // ventana.show();
+        Ventana ventana = new Ventana();
+        ventana.show();
 
         if (args.length > 0) {
             String nombreArchivo = args[0];
