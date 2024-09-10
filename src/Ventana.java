@@ -1,6 +1,5 @@
 import java.io.Reader;
 import java.io.StringReader;
-import javax.swing.*;
 
 //hecho por lauty
 
@@ -13,7 +12,7 @@ public class Ventana extends javax.swing.JFrame {
     }
     // <editor-fold defaultstate="collapsed" desc="Generated
     // Code">//GEN-BEGIN:initComponents
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 

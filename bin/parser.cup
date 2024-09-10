@@ -5,7 +5,7 @@ import java.util.List;
 
 parser code
 {:
-    public List<String> datos = new ArrayList<String>();
+    public Nodo padre;
 
     @Override
     public void syntax_error(Symbol s){
@@ -24,11 +24,11 @@ terminal ID, NUMBER;
 terminal PLUS, STAR, EQUAL, LPAREN, RPAREN, LBRACE, RBRACE, SEMICOLON;
 
 // Define los no-terminales
-non terminal String PROGRAM; //Program
-non terminal String DECL; //Declaracion
-non terminal String STATEMENT;       //Statement
-non terminal String EXP;      //Expresion matematica
-non terminal String BLOCK;     //Bloque de codigo
+non terminal PROGRAM; //Program
+non terminal DECL; //Declaracion
+non terminal STATEMENT;       //Statement
+non terminal EXP;      //Expresion matematica
+non terminal BLOCK;     //Bloque de codigo
 
 // Precedencia de operadores
 precedence left PLUS;
@@ -37,32 +37,77 @@ precedence left STAR;
 //Producciones
 
 PROGRAM ::=
-        INT MAIN LPAREN RPAREN LBRACE BLOCK RBRACE
-    |   VOID MAIN LPAREN RPAREN LBRACE BLOCK RBRACE
+        INT MAIN LPAREN RPAREN LBRACE BLOCK:a RBRACE {:
+            System.out.println("Programa :");
+            
+        :}
+    |   VOID MAIN LPAREN RPAREN LBRACE BLOCK:a RBRACE{:
+            System.out.println("Programa :");
+            
+        :}
 ;
 
 BLOCK ::=
-        DECL BLOCK
-    |   STATEMENT BLOCK
+        DECL:d BLOCK:b {:
+            System.out.println("declaracion bloque");
+            
+        :}
+    |   STATEMENT:s BLOCK:b {:
+            System.out.println("sentencia bloque");
+            
+        :}
+    |   /* epsilon */ {:
+        System.out.println("EOF");
+    :}
 ;
 
 DECL ::=
-        INT ID SEMICOLON
-    |   BOOL ID SEMICOLON
+        INT ID:id SEMICOLON {:
+            System.out.println("int id ;");
+        :}
+    |   BOOL ID:id SEMICOLON {:
+            System.out.println("Bool id;");
+            
+        :}
 ;
 
 STATEMENT ::=
-        ID EQUAL EXP SEMICOLON
-    |   RETURN EXP SEMICOLON
-    |   RETURN SEMICOLON
+        ID:id EQUAL EXP:e SEMICOLON {:
+            System.out.println("id equal exp semicolon");
+            
+        :}
+    |   RETURN EXP:e SEMICOLON {:
+            System.out.println("RETURN EXP:e SEMICOLON");
+            
+        :}
+    |   RETURN SEMICOLON {:
+            System.out.println("return;");
+            
+        :}
 ;
 
 EXP ::=
-        EXP PLUS EXP
-    |   EXP STAR EXP
-    |   LPAREN EXP RPAREN
-    |   ID
-    |   NUMBER
-    |   TRUE
-    |   FALSE
+        EXP:a PLUS EXP:b {:
+            System.out.println("exp + exp");
+            
+        :}
+    |   EXP:a STAR EXP:b {:
+            System.out.println("exp * exp");
+            
+        :}
+    |   LPAREN EXP:e RPAREN {:
+            System.out.println("(expresion)");
+        :}
+    |   ID:id {:
+            System.out.println("id");
+        :}
+    |   NUMBER:n {:
+            System.out.println("num");
+        :}
+    |   TRUE {:
+            System.out.println("TRUE");
+        :}
+    |   FALSE {:
+            System.out.println("FALSE");
+        :}
 ;
