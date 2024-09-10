@@ -1,35 +1,29 @@
-import java.util.ArrayList;
-
 public class Nodo {
     
-    private String valor;
-    private String id;
-    private ArrayList<Nodo> hijos;
+    public Info info;
+    public Nodo izq;
+    public Nodo der;
+    public int graphId;
 
-    public Nodo(String valor){
-        this.valor = valor;
-        this.hijos = new ArrayList<>();
-        this.id = "0";
+    public Nodo(){
+
+    }
+
+    public Nodo(Info info,int id){
+        this.info = info;
+        this.graphId = id;
     }
 
     //getters
 
-    public String getValor(){
-        return valor;
-    }
-
-    public String getId(){
-        return id;
-    }
-    public ArrayList<Nodo> getHijos(){
-        return hijos;
-    }
-
+    
     //agregar hijos
 
-    public void addHijo(Nodo hijo){
-        hijos.add(hijo);
+    public void addHijoIzq(Nodo hijo){
+        izq = hijo;
     }
 
-
+    public void addHijoDer(Nodo hijo){
+        der = hijo;
+    }
 }

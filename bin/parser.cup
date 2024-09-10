@@ -5,7 +5,9 @@ import java.util.List;
 
 parser code
 {:
-    public Nodo padre;
+    public Nodo padre; //o nodo raiz
+    public ArrayList<String> texto = new ArrayList<>();
+    public int contador = 0;
 
     @Override
     public void syntax_error(Symbol s){
@@ -24,11 +26,13 @@ terminal ID, NUMBER;
 terminal PLUS, STAR, EQUAL, LPAREN, RPAREN, LBRACE, RBRACE, SEMICOLON;
 
 // Define los no-terminales
-non terminal PROGRAM; //Program
-non terminal DECL; //Declaracion
-non terminal STATEMENT;       //Statement
-non terminal EXP;      //Expresion matematica
-non terminal BLOCK;     //Bloque de codigo
+non terminal Nodo PROGRAM; //Program
+non terminal Nodo DECL; //Declaracion
+non terminal Nodo STATEMENT;       //Statement
+non terminal Nodo EXP;      //Expresion matematica
+non terminal Nodo BLOCK;     //Bloque de codigo
+non terminal Nodo TYPE;	//BOOL O INT
+non terminal Nodo VAR; //variable (auxiliar)
 
 // Precedencia de operadores
 precedence left PLUS;
@@ -38,76 +42,150 @@ precedence left STAR;
 
 PROGRAM ::=
         INT MAIN LPAREN RPAREN LBRACE BLOCK:a RBRACE {:
-            System.out.println("Programa :");
-            
+            parser.contador++;
+            parser.texto.add("graphid:"+parser.contador+" # "+"int main :");
+            Nodo tmp = new Nodo(new Info("programa",null,null,null),parser.contador);
+			tmp.addHijoIzq(a);
+			parser.padre = tmp;
+			RESULT = tmp;
         :}
     |   VOID MAIN LPAREN RPAREN LBRACE BLOCK:a RBRACE{:
-            System.out.println("Programa :");
-            
+            parser.contador++;
+            parser.texto.add("graphid:"+parser.contador+" # "+"void main :");
+            Nodo tmp = new Nodo(new Info("programa",null,null,null),parser.contador);
+			tmp.addHijoIzq(a);
+			parser.padre = tmp;
+			RESULT = tmp;
         :}
 ;
 
 BLOCK ::=
         DECL:d BLOCK:b {:
-            System.out.println("declaracion bloque");
-            
+            parser.contador++;
+            parser.texto.add("graphid:"+parser.contador+" # "+"declaracion y bloque");
+            Nodo tmp = new Nodo(new Info("bloque",null,null,null),parser.contador);
+			tmp.addHijoIzq(d);
+			tmp.addHijoDer(b);
+			RESULT = tmp;
         :}
     |   STATEMENT:s BLOCK:b {:
-            System.out.println("sentencia bloque");
-            
+            parser.contador++;
+            parser.texto.add("graphid:"+parser.contador+" # "+"sentencia y bloque");
+            Nodo tmp = new Nodo(new Info("bloque",null,null,null),parser.contador);
+			tmp.addHijoIzq(s);
+			tmp.addHijoDer(b);
+			RESULT = tmp;
         :}
     |   /* epsilon */ {:
-        System.out.println("EOF");
-    :}
+			RESULT = null;
+		:}
 ;
 
 DECL ::=
-        INT ID:id SEMICOLON {:
-            System.out.println("int id ;");
-        :}
-    |   BOOL ID:id SEMICOLON {:
-            System.out.println("Bool id;");
-            
+        TYPE:t VAR:v SEMICOLON {:
+            parser.contador++;
+            parser.texto.add("graphid:"+parser.contador+" # "+"DECLARACION: "+ t.info.tipo + "variable;");
+			Nodo tmp = new Nodo(new Info("declaracion",null,null,null),parser.contador);
+			tmp.addHijoIzq(t);
+			tmp.addHijoDer(v);
+            RESULT = tmp;
         :}
 ;
 
 STATEMENT ::=
-        ID:id EQUAL EXP:e SEMICOLON {:
-            System.out.println("id equal exp semicolon");
-            
+        VAR:v EQUAL EXP:e SEMICOLON {:
+            parser.contador++;
+            parser.texto.add("graphid:"+parser.contador+" # variable = expresion");
+            Nodo tmp = new Nodo(new Info("\"=\"",null,null,null),parser.contador);
+			tmp.addHijoIzq(v);
+			tmp.addHijoDer(e);
+			RESULT = tmp;
         :}
     |   RETURN EXP:e SEMICOLON {:
-            System.out.println("RETURN EXP:e SEMICOLON");
-            
+            parser.contador++;
+            parser.texto.add("graphid:"+parser.contador+" # "+"RETURN EXP:e SEMICOLON");
+            Nodo tmp = new Nodo(new Info("return",Simbolo.RETURN,null,null),parser.contador);
+			tmp.addHijoIzq(e);
+			RESULT = tmp;
         :}
     |   RETURN SEMICOLON {:
-            System.out.println("return;");
-            
+            parser.contador++;
+            parser.texto.add("graphid:"+parser.contador+" # "+"return;");
+            Nodo tmp = new Nodo(new Info("return",Simbolo.RETURN,null,null),parser.contador);
+			RESULT = tmp;
         :}
 ;
 
 EXP ::=
         EXP:a PLUS EXP:b {:
-            System.out.println("exp + exp");
-            
+            parser.contador++;
+            parser.texto.add("graphid:"+parser.contador+" # "+"exp + exp");
+            Nodo tmp = new Nodo(new Info("\"+\"",Simbolo.PLUS,null,null),parser.contador);
+			tmp.addHijoIzq(a);
+			tmp.addHijoDer(b);
+            RESULT = tmp;
         :}
     |   EXP:a STAR EXP:b {:
-            System.out.println("exp * exp");
-            
+            parser.contador++;
+            parser.texto.add("graphid:"+parser.contador+" # "+"exp * exp");
+            Nodo tmp = new Nodo(new Info("\"*\"",Simbolo.STAR,null,null),parser.contador);
+			tmp.addHijoIzq(a);
+			tmp.addHijoDer(b);
+            RESULT = tmp;
         :}
     |   LPAREN EXP:e RPAREN {:
-            System.out.println("(expresion)");
+            parser.contador++;
+            parser.texto.add("graphid:"+parser.contador+" # "+"(expresion)");
+			Nodo tmp = new Nodo(new Info("expresion",null,null,null),parser.contador);
+			tmp.addHijoIzq(e);
+            RESULT = tmp;
         :}
     |   ID:id {:
-            System.out.println("id");
+            parser.contador++;
+            parser.texto.add("graphid:"+parser.contador+" # "+id.toString());
+            Nodo tmp = new Nodo(new Info(id.toString(),Simbolo.ID,null,"variable"),parser.contador);
+            RESULT = tmp;
         :}
     |   NUMBER:n {:
-            System.out.println("num");
+            parser.contador++;
+            parser.texto.add("graphid:"+parser.contador+" # "+"num: "+Integer.parseInt(n.toString()));
+            Nodo tmp = new Nodo(new Info(n.toString(),Simbolo.NUMBER,Integer.parseInt(n.toString()),"entero"),parser.contador);
+            RESULT = tmp;
         :}
     |   TRUE {:
-            System.out.println("TRUE");
+            parser.contador++;
+            parser.texto.add("graphid:"+parser.contador+" # "+"TRUE");
+			Nodo tmp = new Nodo(new Info("true",Simbolo.TRUE,1,"booleano"),parser.contador);
+            RESULT = tmp;
         :}
     |   FALSE {:
-            System.out.println("FALSE");
+            parser.contador++;
+            parser.texto.add("graphid:"+parser.contador+" # "+"FALSE");
+			Nodo tmp = new Nodo(new Info("false",Simbolo.FALSE,0,"booleano"),parser.contador);
+            RESULT = tmp;
+        :}
+;
+
+TYPE::=	
+		INT {:
+            parser.contador++;
+            parser.texto.add("graphid:"+parser.contador+" # "+"TYPE INT");
+			Nodo tmp = new Nodo(new Info("entero",Simbolo.INT,null,"entero"),parser.contador);
+			RESULT = tmp;
+		:}
+	|	BOOL {:
+            parser.contador++;
+            parser.texto.add("graphid:"+parser.contador+" # "+"TYPE BOOL");
+			Nodo tmp = new Nodo(new Info("booleano",Simbolo.BOOL,null,"booleano"),parser.contador);
+			RESULT = tmp;
+		:}
+;
+
+VAR ::=
+        ID:id {:
+            parser.contador++;
+            parser.texto.add("graphid:"+parser.contador+" # "+"variable:"+id.toString());
+            Nodo tmp = new Nodo(new Info(id.toString(),Simbolo.ID,null,"variable"),parser.contador);
+            RESULT = tmp;
         :}
 ;

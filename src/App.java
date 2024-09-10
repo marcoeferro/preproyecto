@@ -1,13 +1,13 @@
-import java_cup.Lexer;
-import java_cup.parser;
-import java.io.*;
+//import java_cup.Lexer;
+//import java_cup.parser;
+//import java.io.*;
 
 public class App {
     public static void main(String[] args) throws Exception {
         Ventana ventana = new Ventana();
         ventana.show();
 
-        if (args.length > 0) {
+        /*if (args.length > 0) {
             String nombreArchivo = args[0];
             lexer lexer = new lexer(new FileReader(nombreArchivo));
             //Crear un parser (análisis sintáctico) usando el lexer
@@ -17,7 +17,7 @@ public class App {
             parser.parse();
         } else {
             System.out.println("Por favor, proporciona el nombre del archivo como argumento.");
-        }
+        }*/
 
 
 
