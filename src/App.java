@@ -5,10 +5,10 @@
 public class App {
     public static void main(String[] args) throws Exception {
         Ventana ventana = new Ventana();
-        ventana.show();
+        ventana.setVisible(true);
 
         /*if (args.length > 0) {
-            String nombreArchivo = args[0];
+            String nomb reArchivo = args[0];
             lexer lexer = new lexer(new FileReader(nombreArchivo));
             //Crear un parser (análisis sintáctico) usando el lexer
             Parser parser = new Parser(lexer);
