@@ -9,6 +9,8 @@ parser code
     public ArrayList<String> texto = new ArrayList<>();
     public int contador = 0;
 
+    SymbolTable symbolTable = new SymbolTable(); // Inicialización de la tabla de símbolos
+
     @Override
     public void syntax_error(Symbol s){
         System.out.println(s  +" Linea "+s.left+1 +"  Columna "+s.right   +" "+ (String)s.value);
@@ -83,12 +85,17 @@ BLOCK ::=
 
 DECL ::=
         TYPE:t VAR:v SEMICOLON {:
-            parser.contador++;
-            parser.texto.add("graphid:"+parser.contador+" # "+"DECLARACION: "+ t.info.tipo + "variable;");
-			Nodo tmp = new Nodo(new Info("declaracion",null,null,null),parser.contador);
-			tmp.addHijoIzq(t);
-			tmp.addHijoDer(v);
-            RESULT = tmp;
+            if(symbolTable.lookup() != null){
+                System.out.println("Error: la variable '" + v + "' ya ha sido declarada.");
+            }else{
+                symbolTable.addSymbol(v, t);
+                parser.contador++;
+                parser.texto.add("graphid:"+parser.contador+" # "+"DECLARACION: "+ t.info.tipo + "variable;");
+                Nodo tmp = new Nodo(new Info("declaracion",null,null,null),parser.contador);
+                tmp.addHijoIzq(t);
+                tmp.addHijoDer(v);
+                RESULT = tmp;
+            }
         :}
 ;
 
@@ -152,10 +159,16 @@ EXP ::=
             RESULT = tmp;
         :}
     |   ID:id {:
-            parser.contador++;
-            parser.texto.add("graphid:"+parser.contador+" # "+id.toString());
-            Nodo tmp = new Nodo(new Info(id.toString(),Simbolo.ID,null,"variable"),parser.contador);
-            RESULT = tmp;
+            // Buscar la variable en la tabla de símbolos
+            Symbol symbol = symbolTable.lookup($1);
+            if (symbol == null) {
+                System.out.println("Error: la variable '" + id + "' no ha sido declarada.");
+            } else {
+                parser.contador++;
+                parser.texto.add("graphid:"+parser.contador+" # "+id.toString());
+                Nodo tmp = new Nodo(new Info(id.toString(),Simbolo.ID,null,"variable"),parser.contador);
+                RESULT = tmp;
+            }
         :}
     |   NUMBER:n {:
             parser.contador++;
