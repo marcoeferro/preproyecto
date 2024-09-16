@@ -118,20 +118,31 @@ STATEMENT ::=
 
 EXP ::=
         EXP:a PLUS EXP:b {:
-            parser.contador++;
-            parser.texto.add("graphid:"+parser.contador+" # "+"exp + exp");
-            Nodo tmp = new Nodo(new Info("\"+\"",Simbolo.PLUS,null,null),parser.contador);
-			tmp.addHijoIzq(a);
-			tmp.addHijoDer(b);
-            RESULT = tmp;
+            // Verificación semántica: los tipos deben coincidir
+            if(a.type.equals(b.type)){
+                parser.contador++;
+                parser.texto.add("graphid:"+parser.contador+" # "+"exp + exp");
+                Nodo tmp = new Nodo(new Info("\"+\"",Simbolo.PLUS,null,null),parser.contador);
+                tmp.addHijoIzq(a);
+                tmp.addHijoDer(b);
+                RESULT = tmp;
+            }else{
+                System.out.println("Error: tipos incompatibles en la suma.");
+            }
+            
         :}
     |   EXP:a STAR EXP:b {:
-            parser.contador++;
-            parser.texto.add("graphid:"+parser.contador+" # "+"exp * exp");
-            Nodo tmp = new Nodo(new Info("\"*\"",Simbolo.STAR,null,null),parser.contador);
-			tmp.addHijoIzq(a);
-			tmp.addHijoDer(b);
-            RESULT = tmp;
+            // Verificación semántica: los tipos deben coincidir
+            if(a.type.equals(b.type)){
+                parser.contador++;
+                parser.texto.add("graphid:"+parser.contador+" # "+"exp * exp");
+                Nodo tmp = new Nodo(new Info("\"*\"",Simbolo.STAR,null,null),parser.contador);
+                tmp.addHijoIzq(a);
+                tmp.addHijoDer(b);
+                RESULT = tmp;
+            }else{
+                System.out.println("Error: tipos incompatibles en la multiplicación.");
+            }
         :}
     |   LPAREN EXP:e RPAREN {:
             parser.contador++;
