@@ -63,20 +63,32 @@ PROGRAM ::=
 
 BLOCK ::=
         DECL:d BLOCK:b {:
+            // Entrar a un nuevo alcance
+            parser.symbolTable.enterScope();
+            
             parser.contador++;
             parser.texto.add("graphid:"+parser.contador+" # "+"declaracion y bloque");
             Nodo tmp = new Nodo(new Info("bloque",null,null,null),parser.contador);
 			tmp.addHijoIzq(d);
 			tmp.addHijoDer(b);
 			RESULT = tmp;
+            
+            // Salir del alcance al terminar el bloque
+            parser.symbolTable.exitScope(); 
         :}
     |   STATEMENT:s BLOCK:b {:
+            // Entrar a un nuevo alcance
+            parser.symbolTable.enterScope();
+            
             parser.contador++;
             parser.texto.add("graphid:"+parser.contador+" # "+"sentencia y bloque");
             Nodo tmp = new Nodo(new Info("bloque",null,null,null),parser.contador);
 			tmp.addHijoIzq(s);
 			tmp.addHijoDer(b);
 			RESULT = tmp;
+                        
+            // Salir del alcance al terminar el bloque
+            parser.symbolTable.exitScope();
         :}
     |   /* epsilon */ {:
 			RESULT = null;
