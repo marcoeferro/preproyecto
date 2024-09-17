@@ -8,6 +8,7 @@ parser code
     public Nodo padre; //o nodo raiz
     public ArrayList<String> texto = new ArrayList<>();
     public int contador = 0;
+    public SymbolTable symbolTable = new SymbolTable();  // Instanciar la tabla de símbolos
 
     @Override
     public void syntax_error(Symbol s){
@@ -61,20 +62,31 @@ PROGRAM ::=
 
 BLOCK ::=
         DECL:d BLOCK:b {:
+            // Entrar a un nuevo alcance
+            parser.symbolTable.enterScope();
+
             parser.contador++;
             parser.texto.add("graphid:"+parser.contador+" # "+"declaracion y bloque");
             Nodo tmp = new Nodo(new Info("bloque",null,null,null),parser.contador);
 			tmp.addHijoIzq(d);
 			tmp.addHijoDer(b);
 			RESULT = tmp;
+            // Salir del alcance al terminar el bloque
+            parser.symbolTable.exitScope();
         :}
     |   STATEMENT:s BLOCK:b {:
+            // Entrar a un nuevo alcance
+            parser.symbolTable.enterScope();
+            
             parser.contador++;
             parser.texto.add("graphid:"+parser.contador+" # "+"sentencia y bloque");
             Nodo tmp = new Nodo(new Info("bloque",null,null,null),parser.contador);
 			tmp.addHijoIzq(s);
 			tmp.addHijoDer(b);
 			RESULT = tmp;
+
+            // Salir del alcance al terminar el bloque
+            parser.symbolTable.exitScope();
         :}
     |   /* epsilon */ {:
 			RESULT = null;
@@ -85,21 +97,43 @@ DECL ::=
         TYPE:t VAR:v SEMICOLON {:
             parser.contador++;
             parser.texto.add("graphid:"+parser.contador+" # "+"DECLARACION: "+ t.info.tipo + "variable;");
-			Nodo tmp = new Nodo(new Info("declaracion",null,null,null),parser.contador);
-			tmp.addHijoIzq(t);
-			tmp.addHijoDer(v);
-            RESULT = tmp;
+			
+            // Verificar si la variable ya existe en el ámbito actual
+            String varName = v.info.nombre;
+            if (parser.symbolTable.lookup(varName) != null) {
+                System.out.println("Error: Variable '" + varName + "' ya declarada.");
+            } else {
+                // Agregar la variable a la tabla de símbolos
+                parser.symbolTable.addSymbol(varName, parser.contador, null, t.info.tipo);
+                Nodo tmp = new Nodo(new Info("declaracion",null,null,null),parser.contador);
+                tmp.addHijoIzq(t);
+                tmp.addHijoDer(v);
+                RESULT = tmp;
+            }
+
         :}
 ;
 
 STATEMENT ::=
         VAR:v EQUAL EXP:e SEMICOLON {:
             parser.contador++;
-            parser.texto.add("graphid:"+parser.contador+" # variable = expresion");
-            Nodo tmp = new Nodo(new Info("\"=\"",null,null,null),parser.contador);
-			tmp.addHijoIzq(v);
-			tmp.addHijoDer(e);
-			RESULT = tmp;
+            
+            // Verificar que el tipo de la variable y la expresión sean compatibles
+            Info varInfo = parser.symbolTable.lookup(v.info.nombre);
+            if (varInfo == null) {
+                throw new RuntimeException("Error: Variable '" + v.info.nombre + "' no está declarada.");
+            }
+            if (!varInfo.tipo.equals(e.info.tipo)) {
+                throw new RuntimeException("Error: Tipos incompatibles en asignación. Se esperaba " + varInfo.tipo + " pero se obtuvo " + e.info.tipo);
+            }else{
+
+                parser.texto.add("graphid:"+parser.contador+" # variable = expresion");
+                Nodo tmp = new Nodo(new Info("\"=\"",null,null,null),parser.contador);
+                tmp.addHijoIzq(v);
+                tmp.addHijoDer(e);
+                RESULT = tmp;
+            }
+
         :}
     |   RETURN EXP:e SEMICOLON {:
             parser.contador++;
@@ -119,19 +153,32 @@ STATEMENT ::=
 EXP ::=
         EXP:a PLUS EXP:b {:
             parser.contador++;
-            parser.texto.add("graphid:"+parser.contador+" # "+"exp + exp");
-            Nodo tmp = new Nodo(new Info("\"+\"",Simbolo.PLUS,null,null),parser.contador);
-			tmp.addHijoIzq(a);
-			tmp.addHijoDer(b);
-            RESULT = tmp;
+            
+             // Verificar que ambos operandos son del mismo tipo y compatibles con suma
+            if (!a.info.tipo.equals("entero") || !b.info.tipo.equals("entero")) {
+                throw new RuntimeException("Error: Tipos incompatibles en suma. Ambos deben ser enteros.");
+            }else{
+
+                parser.texto.add("graphid:"+parser.contador+" # "+"exp + exp");
+                Nodo tmp = new Nodo(new Info("\"+\"",Simbolo.PLUS,null,null),parser.contador);
+                tmp.addHijoIzq(a);
+                tmp.addHijoDer(b);
+                RESULT = tmp;
+            }
         :}
     |   EXP:a STAR EXP:b {:
             parser.contador++;
-            parser.texto.add("graphid:"+parser.contador+" # "+"exp * exp");
-            Nodo tmp = new Nodo(new Info("\"*\"",Simbolo.STAR,null,null),parser.contador);
-			tmp.addHijoIzq(a);
-			tmp.addHijoDer(b);
-            RESULT = tmp;
+            
+            // Verificar que ambos operandos son del mismo tipo y compatibles con suma
+            if (!a.info.tipo.equals("entero") || !b.info.tipo.equals("entero")) {
+                throw new RuntimeException("Error: Tipos incompatibles en suma. Ambos deben ser enteros.");
+            }else{
+                parser.texto.add("graphid:"+parser.contador+" # "+"exp * exp");
+                Nodo tmp = new Nodo(new Info("\"*\"",Simbolo.STAR,null,null),parser.contador);
+                tmp.addHijoIzq(a);
+                tmp.addHijoDer(b);
+                RESULT = tmp;
+            }
         :}
     |   LPAREN EXP:e RPAREN {:
             parser.contador++;
@@ -143,8 +190,19 @@ EXP ::=
     |   ID:id {:
             parser.contador++;
             parser.texto.add("graphid:"+parser.contador+" # "+id.toString());
-            Nodo tmp = new Nodo(new Info(id.toString(),Simbolo.ID,null,"variable"),parser.contador);
-            RESULT = tmp;
+
+
+            // Buscar la variable en la tabla de símbolos
+            String varName = id.toString();
+            Info varInfo = parser.symbolTable.lookup(varName);
+            if (varInfo == null) {
+                System.out.println("Error: Variable '" + varName + "' no ha sido declarada.");
+            }else{
+
+                Nodo tmp = new Nodo(new Info(id.toString(),Simbolo.ID,null,"variable"),parser.contador);
+                RESULT = tmp;
+
+            }
         :}
     |   NUMBER:n {:
             parser.contador++;
@@ -185,7 +243,17 @@ VAR ::=
         ID:id {:
             parser.contador++;
             parser.texto.add("graphid:"+parser.contador+" # "+"variable:"+id.toString());
-            Nodo tmp = new Nodo(new Info(id.toString(),Simbolo.ID,null,"variable"),parser.contador);
-            RESULT = tmp;
+            
+            // Buscar la variable en la tabla de símbolos
+            String varName = id.toString();
+            Info varInfo = parser.symbolTable.lookup(varName);
+            if (varInfo == null) {
+                System.out.println("Error: Variable '" + varName + "' no ha sido declarada.");
+            }else{
+
+                Nodo tmp = new Nodo(new Info(id.toString(),Simbolo.ID,null,"variable"),parser.contador);
+                RESULT = tmp;
+            }
+
         :}
 ;
